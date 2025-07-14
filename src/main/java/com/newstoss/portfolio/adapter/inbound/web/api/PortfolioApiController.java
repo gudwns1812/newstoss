@@ -1,5 +1,6 @@
 package com.newstoss.portfolio.adapter.inbound.web.api;
 
+import com.newstoss.auth.adapter.in.web.domain.MemberPrincipal;
 import com.newstoss.global.response.SuccessResponse;
 import com.newstoss.portfolio.adapter.inbound.web.dto.ChangePortfolioRequestDto;
 import com.newstoss.portfolio.adapter.inbound.web.dto.request.CreatePortfolioRequestDto;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -56,9 +58,10 @@ public class PortfolioApiController {
                     )
             }
     )
-    @PostMapping("/{memberId}")
-    public ResponseEntity<?> createPortfolio(@PathVariable("memberId") UUID memberId,
-                                             @RequestBody CreatePortfolioRequestDto dto) {
+    @PostMapping("")
+    public ResponseEntity<?> createPortfolio(@RequestBody CreatePortfolioRequestDto dto,
+                                             @AuthenticationPrincipal MemberPrincipal principal) {
+        UUID memberId = principal.getMemberId();
         PortfolioStocksResponseDto portfolio = createPortfolio.createPortfolioStock(memberId, dto.getStockCode(), dto.getStockCount(), dto.getEntryPrice());
         return ResponseEntity.ok(new SuccessResponse<>(true, "포트폴리오 생성 성공", portfolio));
     }
@@ -87,10 +90,11 @@ public class PortfolioApiController {
             }
 
     )
-    @PostMapping("{memberId}/{stockCode}")
-    public ResponseEntity<?> changePortfolio(@PathVariable("memberId") UUID memberId,
-                                                            @PathVariable("stockCode") String stockCode,
-                                                            @RequestBody ChangePortfolioRequestDto dto) {
+    @PostMapping("/{stockCode}")
+    public ResponseEntity<?> changePortfolio(@PathVariable("stockCode") String stockCode,
+                                             @RequestBody ChangePortfolioRequestDto dto,
+                                             @AuthenticationPrincipal MemberPrincipal principal) {
+        UUID memberId = principal.getMemberId();
         PortfolioStocksResponseDto responseDto;
         String message;
         if (dto.isAdd()) {
@@ -118,8 +122,9 @@ public class PortfolioApiController {
                     ),
             }
     )
-    @GetMapping("/{memberId}")
-    public ResponseEntity<?> getPortfolios(@PathVariable("memberId") UUID memberId) {
+    @GetMapping("")
+    public ResponseEntity<?> getPortfolios(@AuthenticationPrincipal MemberPrincipal principal) {
+        UUID memberId = principal.getMemberId();
         log.info("Get portfolios for member {}", memberId);
         PortfolioDailyPnlResponseDto portfolioDto = getPortfolioStockUseCase.getPortfolioStocks(memberId);
         return ResponseEntity.ok(new SuccessResponse<>(true, "포트폴리오 조회 성공", portfolioDto));

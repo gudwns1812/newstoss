@@ -1,5 +1,6 @@
 package com.newstoss.portfolio.adapter.inbound.web.api;
 
+import com.newstoss.auth.adapter.in.web.domain.MemberPrincipal;
 import com.newstoss.global.response.SuccessResponse;
 import com.newstoss.portfolio.adapter.inbound.web.dto.MemberPnlAccResponseDto;
 import com.newstoss.portfolio.adapter.inbound.web.dto.response.MemberPnlPeriodResponseDto;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -52,9 +55,10 @@ public class PnlApiController {
             }
     )
     @Parameter(name = "period" , example = "D , W , M , 3M , Y")
-    @GetMapping("/{memberId}")
-    public ResponseEntity<?> getMemberPnlPeriod(@PathVariable("memberId") UUID memberId,
-                                                @RequestParam String period) {
+    @GetMapping("")
+    public ResponseEntity<?> getMemberPnlPeriod(@RequestParam String period,
+                                                @AuthenticationPrincipal MemberPrincipal principal) {
+        UUID memberId = principal.getMemberId();
         log.info("getMemberPnlPeriod called");
         MemberPnlPeriodResponseDto memberPnlPeriod = memberPnlPeriodUseCase.getMemberPnlPeriod(memberId, period);
         return ResponseEntity.ok(new SuccessResponse<>(true, "포트폴리오 손익 기간 조회 성공", memberPnlPeriod));
@@ -83,9 +87,10 @@ public class PnlApiController {
             }
     )
     @Parameter(name = "period", example = "Today, M , Total")
-    @GetMapping("/pnl/{memberId}")
-    public ResponseEntity<?> getMemberPnl(@PathVariable("memberId") UUID memberId,
-                                          @RequestParam String period) {
+    @GetMapping("/pnl")
+    public ResponseEntity<?> getMemberPnl(@RequestParam String period,
+                                          @AuthenticationPrincipal MemberPrincipal principal) {
+        UUID memberId = principal.getMemberId();
         log.info("getMemberPnl called for memberId: {}", memberId);
         Long acc = getMemberPnlAccUseCase.getMemberPnlAcc(memberId, period);
         MemberPnlAccResponseDto dto = new MemberPnlAccResponseDto(acc);
